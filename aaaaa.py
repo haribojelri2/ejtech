@@ -10,6 +10,7 @@ from scipy.stats import linregress
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 from data import *
+from mpl_interactions import panhandler, zoom_factory
 
 plt.rcParams['font.family'] = 'Malgun Gothic'  # 한글 폰트로 나눔고딕 설정
 plt.rcParams['axes.unicode_minus'] =False
@@ -98,23 +99,22 @@ class MainWindow(QMainWindow):
         self.canvas2 = MplCanvas2(self, width=4, height=1.5, dpi=100)
         self.canvas.setFixedSize(800, 600)
         self.canvas2.setFixedSize(400, 370)
+        self.selected_button = self.button_group.checkedButton()
 
-        alpha = QLabel('α:')
+
+        self.alpha = QLabel('α:')
+        self.beta = QLabel('β:')
         self.alpha_input = QLabel(str(self.a))
-
-        beta = QLabel('β:')
         self.beta_input = QLabel(str(self.b))
-
         start = QLabel('Start Settlemint(ST)')
         self.start_input = QLabel(str(self.so))
-
         final = QLabel('Final Settlement(Sf)')
         self.final_input = QLabel(str(self.sf))
 
         
-        grid_layout.addWidget(alpha, 0, 0)
+        grid_layout.addWidget(self.alpha, 0, 0)
         grid_layout.addWidget(self.alpha_input, 0, 1)
-        grid_layout.addWidget(beta, 1, 0)
+        grid_layout.addWidget(self.beta, 1, 0)
         grid_layout.addWidget(self.beta_input, 1, 1)
         grid_layout.addWidget(start, 2, 0)
         grid_layout.addWidget(self.start_input, 2, 1)
