@@ -113,8 +113,6 @@ def update_graph(self):
         self.t_pred = (self.date_pred - self.start_date).days
 
         self.S_pred = self.so-np.sqrt(self.t_pred/(self.a + self.b*self.t_pred))
-        print(self.S_pred[-3:-1])
-
         self.canvas.ax2.xaxis.set_major_locator(self.locator)
         self.canvas.ax2.xaxis.set_major_formatter(self.formatter)
         plt.setp(self.canvas.ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
@@ -126,7 +124,28 @@ def update_graph(self):
         self.canvas.ax2.legend()
         self.canvas.ax2.grid(True)
         plt.tight_layout()
+
+    elif self.selected_button == self.rb3:
+        self.S_final = self.a/(1-self.b)*-1
+        self.alpha_input.setText("{:.4f}".format(self.a))
+        self.beta_input.setText("{:.4f}".format(self.b))
+        self.start_input.setText('{:.4f}cm'.format(self.so))
+        self.final_input.setText("{:.4f}cm".format(self.S_final))
+        self.date_pred = pd.date_range(start=self.start_date, end=self.end_date + pd.Timedelta(days=int(self.line_edit.text())), freq='D')
+        self.t_pred = (self.date_pred - self.start_date).days
+        self.S_pred = self.S_final - (self.S_final -self.s1.iloc[0]) * np.exp(self.t_pred[1:]*np.log(self.b)/self.interval.value() )
+        self.canvas.ax2.xaxis.set_major_locator(self.locator)
+        self.canvas.ax2.xaxis.set_major_formatter(self.formatter)
+        plt.setp(self.canvas.ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
+        self.canvas.ax2.plot(self.date_pred[1:], self.S_pred, 'r-', label='Predicted')
+        self.canvas.ax2.scatter(self.date['측정일'], self.raw_settlements,  marker='o',   edgecolors='blue',   facecolors='none',     s=20,  label='Measured')
+        self.canvas.ax2.set_ylabel('Settlement (cm)')
+        self.canvas.ax2.set_title('Settlement Curve')
+        self.canvas.ax2.legend()
+        self.canvas.ax2.grid(True)
+        plt.tight_layout()
     self.canvas.draw()
+
 
 def Hyperbolic_plot(self):
     self.t_s=(-self.t[1:]/self.s_diff[1:])
@@ -194,6 +213,7 @@ def Hosino_plot(self):
     self.canvas.ax2.grid(True)
     plt.tight_layout()
     self.canvas.draw()
+
     self.canvas2.axes.scatter(self.t[1:], self.t_s, label='Measured')
     self.regression_line, = self.canvas2.axes.plot(self.t[1:], self.a + self.b * self.t[1:], 'r-', label='Regression Line')
     self.canvas2.axes.set_xlabel('(t - to) day')
@@ -204,21 +224,75 @@ def Hosino_plot(self):
     self.canvas2.draw()
 
 def Asaoka_plot(self):
-    self.s1 = self.Settlements[:-1:self.interval.value()]
-    self.s2 = self.Settlements[1::self.interval.value()]
+    date_range = pd.date_range(start=self.data['측정일'].min(), end=self.data['측정일'].max(), freq='D')
 
-    b0, a0, r_value, p_value, std_err = linregress(self.s1, self.s2)
-    b1, a1, r_value, p_value, std_err = linregress(self.s2, self.s1)
+    existing_dates = set(self.data['측정일'])
+    complete_dates = set(date_range)
+    missing_dates = complete_dates - existing_dates
 
-    self.canvas2.axes.plot( self.s1,a0+b0*self.s1)
-    self.canvas2.axes.plot( self.s2,a1+b1*self.s2)
-    self.canvas2.axes.plot(self.s1,self.s2)
-    # self.regression_line, = self.canvas2.axes.plot(self.t[1:], self.a + self.b * self.t[1:], 'r-', label='Regression Line')
-    self.canvas2.axes.set_xlabel('Si (cm)')
-    self.canvas2.axes.set_ylabel('Si-1 (cm)')
+    missing_dates_df = pd.DataFrame(sorted(missing_dates), columns=['측정일'])
+    combined_df = pd.concat([self.data, missing_dates_df]).sort_values(by='측정일').reset_index(drop=True)
+
+    combined_df['침하량'] = combined_df['침하량'].interpolate(method='linear')
+    df = combined_df[(combined_df['측정일']>=self.start_date) & (combined_df['측정일']<=self.end_date)]
+    data=df['침하량'][::self.interval.value()]
+    self.s1 = data[:-1]
+    self.s2 = data[1:]
+    slope, intercept, r_value, p_value, std_err = linregress(self.s1*-1, self.s2*-1)
+    self.a = intercept
+    self.b = slope
+    self.S_final = self.a/(1-self.b)*-1
+
+    self.alpha_input.setText("{:.4f}".format(self.a))
+    self.beta_input.setText("{:.4f}".format(self.b))
+    self.start_input.setText('{:.4f}cm'.format(self.so))
+    self.final_input.setText("{:.4f}cm".format(self.S_final))
+    self.date_pred = pd.date_range(start=self.start_date, end=self.end_date + pd.Timedelta(days=int(self.line_edit.text())), freq='D')
+    self.t_pred = (self.date_pred - self.start_date).days
+    self.S_pred = self.S_final - (self.S_final -self.s1.iloc[0]) * np.exp(self.t_pred[1:]*np.log(self.b)/self.interval.value() )
+    self.canvas.ax2.xaxis.set_major_locator(self.locator)
+    self.canvas.ax2.xaxis.set_major_formatter(self.formatter)
+    plt.setp(self.canvas.ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
+    self.canvas.ax2.plot(self.date_pred[1:], self.S_pred, 'r-', label='Predicted')
+ 
+    self.canvas.ax2.scatter(self.date['측정일'], self.raw_settlements,  marker='o',   edgecolors='blue',   facecolors='none',     s=20,  label='Measured')
+    self.canvas.ax2.set_ylabel('Settlement (cm)')
+    self.canvas.ax2.set_title('Settlement Curve')
+    self.canvas.ax2.legend()
+    self.canvas.ax2.grid(True)
+    plt.tight_layout()
+    self.canvas.draw()
+
+    x_cross = self.a / (1 - self.b)
+    y_cross = x_cross
+    x_min = min(self.s1*-1)
+    x_max = max(max(self.s1*-1), x_cross) * 1.05  # 교차점보다 약간 더 넓게
+    x_range = np.linspace(x_min, x_max, 100)
+
+    # 회귀선 그리기 (x_max까지)
+    self.regression_line, =self.canvas2.axes.plot(x_range, self.a + self.b * x_range, label='Regression line',color='r')
+    self.canvas2.axes.plot([x_min, x_max], [x_min, x_max], label='y=x' , color='b')
+    self.canvas2.axes.set_xlim(x_min, x_max)
+    self.canvas2.axes.set_ylim(x_min, x_max)
+
+    self.canvas2.axes.plot(x_cross, y_cross, 'ro', markersize=10, label='Intersection')
+
+    self.canvas2.axes.plot([x_cross, x_cross], [x_min, y_cross], 'r--', linewidth=1)
+    self.canvas2.axes.plot([x_min, x_cross], [y_cross, y_cross], 'r--', linewidth=1)
+
+    self.canvas2.axes.set_xlabel('S(n)')
+    self.canvas2.axes.set_ylabel('S(n+1)')
     self.canvas2.axes.set_title('Asaoka Method')
     self.canvas2.axes.legend()
+
+    # 그리드 추가
     self.canvas2.axes.grid(True)
+
+    # 교차점 좌표 텍스트로 표시
+    self.canvas2.axes.annotate(f'SF : ({y_cross:.2f})', 
+                            (x_cross, y_cross), 
+                            xytext=(10, 10), 
+                            textcoords='offset points')
     self.canvas2.draw()
 
 def check_method(self, button):
@@ -229,9 +303,16 @@ def check_method(self, button):
     self.t = (self.predict_data['측정일']-self.start_date).dt.days
     self.so = self.Settlements.iloc[0]
     self.s_diff = self.Settlements - self.so
+
     if button == self.rb1:
+        self.alpha.setText('α:')
+        self.beta.setText('β:')
         Hyperbolic_plot(self)
     elif button == self.rb2:
+        self.alpha.setText('α:')
+        self.beta.setText('β:')
         Hosino_plot(self)
     elif button == self.rb3:
+        self.alpha.setText('β0:')
+        self.beta.setText('β1:')
         Asaoka_plot(self)
