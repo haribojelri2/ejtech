@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from scipy.stats import linregress
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
-from data import *
+from etc import *
 from mpl_interactions import panhandler, zoom_factory
 from datetime import datetime
 import os
