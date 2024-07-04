@@ -7,15 +7,11 @@ from scipy.stats import linregress
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.gridspec import GridSpec
-
 class MplCanvas(FigureCanvas):
     def __init__(self, parent=None, width=10, height=8, dpi=100):
-        self.fig = plt.figure(figsize=(width, height), dpi=dpi)
-        gs = GridSpec(4, 1, figure=self.fig)  
-        self.ax1 = self.fig.add_subplot(gs[:2, 0]) 
-        self.ax2 = self.fig.add_subplot(gs[2:, 0])  
-        super(MplCanvas, self).__init__(self.fig)
+        fig, (self.ax1, self.ax2) = plt.subplots(2, 1, figsize=(width, height), sharex=True)
+
+        super(MplCanvas, self).__init__(fig)
 
 class MplCanvas2(FigureCanvas):
     def __init__(self, parent=None, width=5, height=4, dpi=100):
@@ -165,8 +161,6 @@ def update_graph(self):
                         (x_cross, y_cross), 
                         xytext=(10, 10), 
                         textcoords='offset points')
-        # self.canvas2.subplots_adjust(left=0.2) 
-
         self.canvas2.draw()
     self.canvas.draw()
 
@@ -199,17 +193,15 @@ def Hyperbolic_plot(self):
     self.canvas.ax2.legend()
     self.canvas.ax2.grid(True)
     plt.tight_layout()
-
     self.canvas.draw()
 
     self.canvas2.axes.scatter(self.t[1:], self.t_s, label='Measured')
     self.regression_line, = self.canvas2.axes.plot(self.t[1:], self.a + self.b * self.t[1:], 'r-', label='Regression Line')
     self.canvas2.axes.set_xlabel('(t - to) day')
     self.canvas2.axes.set_ylabel('(t - to) / (St - So)')
-    self.canvas2.axes.set_title('Hyperbolic Method')
+    self.canvas2.axes.set_title('Hyperbolic Method: Date vs t/(St-So)')
     self.canvas2.axes.legend()
     self.canvas2.axes.grid(True)
-    self.canvas2.figure.subplots_adjust(left=0.15) 
     self.canvas2.draw()
 
 def Hosino_plot(self):
@@ -244,11 +236,9 @@ def Hosino_plot(self):
     self.regression_line, = self.canvas2.axes.plot(self.t[1:], self.a + self.b * self.t[1:], 'r-', label='Regression Line')
     self.canvas2.axes.set_xlabel('(t - to) day')
     self.canvas2.axes.set_ylabel('(t - to) / (St - So)^2')
-    self.canvas2.axes.set_title('Hosino Method')
+    self.canvas2.axes.set_title('Hosino Method: Date vs t/(St-So)^2')
     self.canvas2.axes.legend()
     self.canvas2.axes.grid(True)
-    self.canvas2.figure.subplots_adjust(left=0.15) 
-
     self.canvas2.draw()
 
 def Asaoka_plot(self):
@@ -321,7 +311,6 @@ def Asaoka_plot(self):
                             (x_cross, y_cross), 
                             xytext=(10, 10), 
                             textcoords='offset points')
-    self.canvas2.figure.subplots_adjust(left=0.15) 
     self.canvas2.draw()
 
 def check_method(self, button):
