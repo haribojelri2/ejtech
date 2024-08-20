@@ -1,6 +1,6 @@
 import pandas as pd
 from PyQt6.QtWidgets import  QFileDialog,QLabel,QSpinBox,QMessageBox
-from PyQt6.QtCore import Qt, QDate
+from PyQt6.QtCore import Qt, QDate, QThread,pyqtSignal
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from scipy.stats import linregress
@@ -14,7 +14,10 @@ class MplCanvas(FigureCanvas):
         self.fig = plt.figure(figsize=(width, height), dpi=dpi)
         gs = GridSpec(4, 1, figure=self.fig)  
         self.ax1 = self.fig.add_subplot(gs[:2, 0]) 
-        self.ax2 = self.fig.add_subplot(gs[2:, 0])  
+        self.ax2 = self.fig.add_subplot(gs[2:, 0],sharex=self.ax1)  
+
+        self.ax1.label_outer()
+        self.ax2.label_outer()
         super(MplCanvas, self).__init__(self.fig)
 
 class MplCanvas2(FigureCanvas):
@@ -24,16 +27,28 @@ class MplCanvas2(FigureCanvas):
         super(MplCanvas2, self).__init__(fig)
 
 def open_file_dialog(self):
-    file_name, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx);;All Files (*)")
-    if file_name:
-        self.data = pd.read_excel(file_name)
-        self.data['측정일'] = pd.to_datetime(self.data['측정일'])
-        if '측정일' in self.data.columns:
+    try:
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx;*.xls);;All Files (*)")
+        if file_name:
+            self.data = pd.read_excel(file_name)
+            self.data['측정일'] = pd.to_datetime(self.data['측정일'])
             start_date = self.data['측정일'].iloc[0]
             end_date = self.data['측정일'].iloc[-1]
             self.start_date2.setDate(QDate(start_date.year, start_date.month, start_date.day))
             self.end_date2.setDate(QDate(end_date.year, end_date.month, end_date.day))
             QMessageBox.information(self, "Success", "파일이 성공적으로 업로드되었습니다.")
+    
+    except Exception as e:
+         QMessageBox.information(self, 'Fail', f'An error occurred: {e}')
+
+def open_file_dialog2(self):
+    try:
+        file_name, _ = QFileDialog.getOpenFileName(self, "Open Excel File", "", "Excel Files (*.xlsx;*.xls);;All Files (*)")
+        if file_name:
+            self.file = pd.read_excel(file_name)
+            QMessageBox.information(self, "Success", "파일이 성공적으로 업로드되었습니다.")
+    except Exception as e:
+         QMessageBox.information(self, 'Fail', f'An error occurred: {e}')
 
 
 def show_time_interval(self, checked):
@@ -153,7 +168,7 @@ def update_graph(self):
         x_range = np.linspace(x_min, x_max, 100)
 
         # 회귀선 그리기 (x_max까지)
-        self.canvas2.axes.plot([x_min, x_max], [x_min, x_max], label='y=x' , color='b')
+        self.measured=self.canvas2.axes.plot([x_min, x_max], [x_min, x_max], label='y=x' , color='b')
         self.canvas2.axes.set_xlim(x_min, x_max)
         self.canvas2.axes.set_ylim(x_min, x_max)
 
@@ -171,16 +186,19 @@ def update_graph(self):
     self.canvas.draw()
 
 
+
 def Hyperbolic_plot(self):
     self.t_s=(-self.t[1:]/self.s_diff[1:])
     slope ,intercept,r,p,e = linregress(self.t[1:],self.t_s)
-    self.a = intercept
-    self.b = slope
 
+    if self.alpha_changed==False and self.beta_changed==False:
+        self.a = intercept
+        self.b = slope
+        self.alpha_input.setText("{:.4f}".format(self.a))
+        self.beta_input.setText("{:.4f}".format(self.b))
+    self.alpha_changed=False
+    self.beta_changed=False
     self.S_final = 1 / self.b - self.so
-
-    self.alpha_input.setText("{:.4f}".format(self.a))
-    self.beta_input.setText("{:.4f}".format(self.b))
     self.start_input.setText('{:.4f}cm'.format(self.so))
     self.final_input.setText("{:.4f}cm".format(self.S_final))
     self.date_pred = pd.date_range(start=self.start_date, end=self.end_date + pd.Timedelta(days=int(self.line_edit.text())), freq='D')
@@ -202,7 +220,7 @@ def Hyperbolic_plot(self):
 
     self.canvas.draw()
 
-    self.canvas2.axes.scatter(self.t[1:], self.t_s, label='Measured')
+    self.measured = self.canvas2.axes.scatter(self.t[1:], self.t_s, color='blue', marker='o', label='Measured')
     self.regression_line, = self.canvas2.axes.plot(self.t[1:], self.a + self.b * self.t[1:], 'r-', label='Regression Line')
     self.canvas2.axes.set_xlabel('(t - to) day')
     self.canvas2.axes.set_ylabel('(t - to) / (St - So)')
@@ -215,13 +233,14 @@ def Hyperbolic_plot(self):
 def Hosino_plot(self):
     self.t_s=(self.t[1:]/(self.s_diff[1:])**2)
     slope, intercept, r_value, p_value, std_err = linregress(self.t[1:], self.t_s)
-    self.a = intercept
-    self.b = slope
-
+    if self.alpha_changed==False and self.beta_changed==False:
+        self.a = intercept
+        self.b = slope
+        self.alpha_input.setText("{:.4f}".format(self.a))
+        self.beta_input.setText("{:.4f}".format(self.b))
+    self.alpha_changed=False
+    self.beta_changed=False
     self.S_final = np.sqrt(1 / self.b) - self.so
-
-    self.alpha_input.setText("{:.4f}".format(self.a))
-    self.beta_input.setText("{:.4f}".format(self.b))
     self.start_input.setText('{:.4f}cm'.format(self.so))
     self.final_input.setText("{:.4f}cm".format(self.S_final))
     self.date_pred = pd.date_range(start=self.start_date, end=self.end_date + pd.Timedelta(days=int(self.line_edit.text())), freq='D')
@@ -240,7 +259,7 @@ def Hosino_plot(self):
     plt.tight_layout()
     self.canvas.draw()
 
-    self.canvas2.axes.scatter(self.t[1:], self.t_s, label='Measured')
+    self.measured = self.canvas2.axes.scatter(self.t[1:], self.t_s, color='blue', marker='o', label='Measured')
     self.regression_line, = self.canvas2.axes.plot(self.t[1:], self.a + self.b * self.t[1:], 'r-', label='Regression Line')
     self.canvas2.axes.set_xlabel('(t - to) day')
     self.canvas2.axes.set_ylabel('(t - to) / (St - So)^2')
@@ -259,29 +278,32 @@ def Asaoka_plot(self):
     missing_dates = complete_dates - existing_dates
 
     missing_dates_df = pd.DataFrame(sorted(missing_dates), columns=['측정일'])
-    combined_df = pd.concat([self.data, missing_dates_df]).sort_values(by='측정일').reset_index(drop=True)
+    self.combined_df = pd.concat([self.data, missing_dates_df]).sort_values(by='측정일').reset_index(drop=True)
 
-    combined_df['침하량'] = combined_df['침하량'].interpolate(method='linear')
-    df = combined_df[(combined_df['측정일']>=self.start_date) & (combined_df['측정일']<=self.end_date)]
-    data=df['침하량'][::self.interval.value()]
+    self.combined_df['침하량'] = self.combined_df['침하량'].interpolate(method='linear')
+    self.combined_df = self.combined_df[(self.combined_df['측정일']>=self.start_date) & (self.combined_df['측정일']<=self.end_date)]
+    data=self.combined_df['침하량'][::self.interval.value()]
     self.s1 = data[:-1]
     self.s2 = data[1:]
     slope, intercept, r_value, p_value, std_err = linregress(self.s1*-1, self.s2*-1)
-    self.a = intercept
-    self.b = slope
+    if self.alpha_changed==False and self.beta_changed==False:
+        self.a = intercept
+        self.b = slope
+        self.alpha_input.setText("{:.4f}".format(self.a))
+        self.beta_input.setText("{:.4f}".format(self.b))
+    self.alpha_changed=False
+    self.beta_changed=False
     self.S_final = self.a/(1-self.b)*-1
-
-    self.alpha_input.setText("{:.4f}".format(self.a))
-    self.beta_input.setText("{:.4f}".format(self.b))
     self.start_input.setText('{:.4f}cm'.format(self.so))
     self.final_input.setText("{:.4f}cm".format(self.S_final))
     self.date_pred = pd.date_range(start=self.start_date, end=self.end_date + pd.Timedelta(days=int(self.line_edit.text())), freq='D')
     self.t_pred = (self.date_pred - self.start_date).days
     self.S_pred = self.S_final - (self.S_final -self.s1.iloc[0]) * np.exp(self.t_pred[1:]*np.log(self.b)/self.interval.value() )
+
     self.canvas.ax2.xaxis.set_major_locator(self.locator)
     self.canvas.ax2.xaxis.set_major_formatter(self.formatter)
     plt.setp(self.canvas.ax2.xaxis.get_majorticklabels(), rotation=45, ha='right')
-    self.canvas.ax2.plot(self.date_pred[1:], self.S_pred, 'r-', label='Predicted')
+    self.canvas.ax2.plot(self.date_pred[1::self.interval.value()], self.S_pred[::self.interval.value()], 'r-', label='Predicted')
  
     self.canvas.ax2.scatter(self.date['측정일'], self.raw_settlements,  marker='o',   edgecolors='blue',   facecolors='none',     s=20,  label='Measured')
     self.canvas.ax2.set_ylabel('Settlement (cm)')
@@ -299,7 +321,7 @@ def Asaoka_plot(self):
 
     # 회귀선 그리기 (x_max까지)
     self.regression_line, =self.canvas2.axes.plot(x_range, self.a + self.b * x_range, label='Regression line',color='r')
-    self.canvas2.axes.plot([x_min, x_max], [x_min, x_max], label='y=x' , color='b')
+    self.measured, = self.canvas2.axes.plot([x_min, x_max], [x_min, x_max], label='y=x' , color='b')
     self.canvas2.axes.set_xlim(x_min, x_max)
     self.canvas2.axes.set_ylim(x_min, x_max)
 
@@ -325,6 +347,9 @@ def Asaoka_plot(self):
     self.canvas2.draw()
 
 def check_method(self, button):
+    # try:
+    self.alpha_changed=False
+    self.beta_changed=False
     basic_plot(self)
     self.date=self.data[self.data['측정일']<self.end_date]
     self.raw_settlements = self.date['침하량']
@@ -346,3 +371,5 @@ def check_method(self, button):
         self.alpha.setText('β0:')
         self.beta.setText('β1:')
         Asaoka_plot(self)
+    # except:
+    #     QMessageBox.information(self, "Error", "파일을 업로드 하세요.")
