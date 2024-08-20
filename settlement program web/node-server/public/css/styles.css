@@ -1,0 +1,152 @@
+/* 기본 설정 */
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f0f2f5;
+  color: #333;
+}
+
+/* 컨테이너 스타일 */
+div {
+  max-width: 1600px;
+  margin: 18px auto;
+  padding: 0px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* 폼 스타일 */
+form {
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center; /* 텍스트를 중앙 정렬 */
+
+}
+
+.input-group label {
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+/* 업로드 폼 스타일 */
+#uploadForm {
+  display: flex;
+  /* flex-direction: column;  */
+  gap: 20px;
+}
+
+.first, .second {
+  display: flex;
+  gap: 20px;
+  width: 100%; /* 너비를 부모 요소에 맞춤 */
+
+}
+
+/* 라디오 버튼 스타일 */
+.radio-container {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.radio-container input {
+  margin-right: 10px;
+}
+
+/* 버튼 스타일 */
+button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  flex: 1;
+  min-width: 150px;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #00b35a;
+}
+
+/* 캔버스 컨테이너 스타일 */
+.canvas-wrapper {
+  display: flex;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.left-column {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 20px;
+}
+
+.right-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 0.5;
+}
+
+canvas {
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  height: auto;
+}
+
+/* 반응형 레이아웃 */
+@media (max-width: 768px) {
+  div {
+    padding: 20px;
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+    font-size: 18px;
+  }
+
+  input[type="file"],
+  input[type="date"],
+  input[type="number"] {
+    padding: 14px;
+  }
+
+  .canvas-wrapper {
+    flex-direction: column;
+  }
+
+  .right-column {
+    align-items: flex-start;
+  }
+}

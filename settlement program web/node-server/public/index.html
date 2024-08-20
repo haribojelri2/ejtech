@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ko">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="/css/styles.css">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- <script src="/basic_plot.js"></script> <script src="/plot.js"></script> -->
+        <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <link rel="icon" href="images/ejtech.ico" type="image/x-icon">
+        <title>EJTECH Settlements</title>
+    </head>
+    <body>
+        <div>
+            <form
+                id="uploadForm"
+                action="/upload"
+                method="POST"
+                enctype="multipart/form-data">
+                <img src="images/ejtech.jpg" alt="Icon" class="icon">
+                <div class="input_group">
+                    <input type="file" id="attachFile" name="file" required="required">
+                </div>
+                <!-- <button id="fileSubmitBtn">Upload</button> -->
+
+                <div class="input_group">
+                    <label class="radio-container">
+                        <input type="radio" id="hyperbolic" name="plotType" value="hyperbolic">
+                        <span class="radio-checkmark"></span>
+                        Hyperbolic
+                    </label>
+                </div>
+                <div class="input_group">
+                    <label class="radio-container">
+                        <input type="radio" id="hosino" name="plotType" value="hosino">
+                        <span class="radio-checkmark"></span>
+                        Hosino
+                    </label>
+                </div>
+                <div class="input_group">
+                    <label class="radio-container">
+                        <input type="radio" id="asaoka" name="plotType" value="asaoka">
+                        <span class="radio-checkmark"></span>
+                        Asaoka
+                    </label>
+                </div>
+                <div id="timeInput" style="display: none;">
+                    <label for="timeInterval">time interval:</label>
+                    <input type="number" id="timeInterval" name="timeInterval">
+                </div>
+                <div class="input-group">
+                    <label for="startDate">Start Date</label>
+                    <input type="date" id="startDate" name="startDate" required="required">
+                </div>
+
+                <div class="input-group">
+                    <label for="endDate">End Date</label>
+                    <input type="date" id="endDate" name="endDate" required="required">
+                </div>
+
+                <div class="input-group">
+                    <label for="predict_date">Predict Date</label>
+                    <input type="number" id="predict_date" name="predict_date" required="required">
+                </div>
+
+                <button type="submit">제출하기</button>
+            </form>
+        </div>
+
+        <div class="canvas-wrapper">
+            <div class="left-column">
+                <canvas id="basic_plot" width="1000" height="280"></canvas>
+                <canvas id="main_plot" width="1000" height="280"></canvas>
+            </div>
+
+            <div class="right-column">
+                <div>
+                    <button type="submit">Draw</button>
+
+                    <button type="submit">Save</button>
+
+                    <button type="submit">Safe</button>
+                </div>
+                <canvas id="sub_plot" width="500" height="250"></canvas>
+            </div>
+        </div>
+
+    </body>
+</html>
