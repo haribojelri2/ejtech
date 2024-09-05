@@ -54,7 +54,7 @@ app.post('/upload', upload.single('file'), async (req, res) => {
     form.append('startDate', startDate);
     form.append('endDate', endDate);
     form.append('predict_date', predict_date);
-    const pythonServerUrl = 'http://localhost:5000/process-file';
+    const pythonServerUrl = 'http://settlementpython-dqdbezh9eqfvekdd.koreacentral-01.azurewebsites.net:5000/process-file';
 
     // Python 서버로 파일 전송을 비동기로 처리
     try {
