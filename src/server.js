@@ -12,10 +12,11 @@ app.use(compression());
 // 파일 저장 설정
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '..', 'uploads'));
+        const uploadPath = process.env.TEMP || 'D:\\home\\LogFiles';
+        cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // 파일 이름 설정
+        cb(null, Date.now() + path.extname(file.originalname));
     }
 });
 
