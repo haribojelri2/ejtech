@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "echo 'No build step required'",
-    "test": "echo \"Error: no test specified\" ,
+    "test": "echo 'Error: no test specified'" ,
     "start": "node src/server.js"
   },
   "author": "",
